@@ -1,0 +1,159 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/vaadin-button/vaadin-button.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="../bower_components/vaadin-grid/vaadin-grid.html">
+<link rel="import" href="../bower_components/vaadin-text-field/vaadin-text-field.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/vaadin-dialog/vaadin-dialog.html">
+
+<dom-module id="payment-request-polymer-demo-app">
+  <template>
+    <style include="shared-styles"></style>
+    <div class="card">
+      <h1>PaymentRequest API Demo</h1>
+    </div>
+    <div class="card">
+      <vaadin-grid items="{{_cartItems}}" height-by-rows>
+        <vaadin-grid-column>
+          <template class="header">Item</template>
+          <template>[[item.name]] ([[item.price]]€ / pcs)</template>
+        </vaadin-grid-column>
+
+        <vaadin-grid-column width="80px" flex-grow="0">
+          <template class="header">Quantity</template>
+          <template>
+            <vaadin-text-field value="{{item.quantity}}"></vaadin-text-field>
+          </template>
+        </vaadin-grid-column>
+
+        <vaadin-grid-column width="80px" flex-grow="0">
+          <template class="header">Price</template>
+          <template>[[_rowTotal(item.price, item.quantity)]]€</template>
+        </vaadin-grid-column>
+      </vaadin-grid>
+
+      <div style="text-align: right">
+        <p>Subtotal
+          ([[_cartTotalItems(_cartItems.*)]] items)
+          [[_cartTotal(_cartItems.*)]]€</p>
+
+        <vaadin-button id="pay" theme="primary">Pay now</vaadin-button>
+      </div>
+    </div>
+
+    <vaadin-dialog id="successDialog">
+      <template>
+        <h1>Purchase success</h1>
+      </template>
+    </vaadin-dialog>
+
+    <vaadin-dialog id="requestingDialog">
+      <template>
+        <h1>Requesting payment</h1>
+      </template>
+    </vaadin-dialog>
+
+    <vaadin-dialog id="errorDialog">
+      <template>
+        <h1>Purchase cancelled</h1>
+      </template>
+    </vaadin-dialog>
+  </template>
+
+  <script>
+    class PaymentRequestPolymerDemoApp extends Polymer.Element {
+      static get is() {
+        return 'payment-request-polymer-demo-app';
+      }
+      static get properties() {
+        return {
+          _cartItems: {
+            type: Array,
+            value: [
+              {
+                "name": "Stickers",
+                "quantity": 10,
+                "price": 0.50
+              },
+              {
+                "name": "Laptop",
+                "quantity": 1,
+                "price": 1337
+              }
+            ]
+          }
+        };
+      }
+      ready() {
+        super.ready();
+        // debugger;
+        const payButton = this.shadowRoot.getElementById('pay');
+        payButton.addEventListener('click', this._payClick.bind(this));
+      }
+      _payClick() {
+        const supportedPaymentMethods = [
+          {
+            supportedMethods: 'basic-card',
+          }
+        ];
+        const paymentDetails = {
+          total: {
+            label: `Cart (${this._cartTotalItems()}) items)`,
+            amount:{
+              currency: 'EUR',
+              value: this._cartTotal()
+            }
+          }
+        };
+        // Options isn't required.
+        const options = {};
+
+        const pr = new PaymentRequest(
+          supportedPaymentMethods,
+          paymentDetails,
+          options
+        );
+        const root = this.shadowRoot;
+        pr.show()
+          .then((paymentResponse) => {
+            // In real implementation we would send the user filled payment data
+            // to server-side and the server-side would make the payment via a
+            // service like Stripe
+            const requestingDialog = root.getElementById('requestingDialog');
+
+            requestingDialog.opened = true;
+            window.setTimeout(() => {
+              const successDialog = root.getElementById('successDialog');
+
+              requestingDialog.opened = false;
+              successDialog.opened = true;
+              return paymentResponse.complete();
+            }, 3000);
+
+          })
+          .catch((err) => {
+            const errorDialog = root.getElementById('errorDialog');
+            errorDialog.opened = true;
+          });
+      }
+      _rowTotal(price, count) {
+        return price * count;
+      }
+      _cartTotal(cartContents) {
+        let sum = 0;
+        if (this._cartItems != null) {
+          this._cartItems.forEach(item => sum += item.quantity * item.price);
+        }
+        return sum;
+      }
+      _cartTotalItems(cartContents) {
+        let sum = 0;
+        if (this._cartItems != null) {
+          this._cartItems.forEach(item => sum += item.quantity * 1);
+        }
+        return sum;
+      }
+    }
+    window.customElements.define(PaymentRequestPolymerDemoApp.is, PaymentRequestPolymerDemoApp);
+  </script>
+</dom-module>
