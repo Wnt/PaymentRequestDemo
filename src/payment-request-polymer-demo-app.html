@@ -86,7 +86,6 @@
       }
       ready() {
         super.ready();
-        // debugger;
         const payButton = this.shadowRoot.getElementById('pay');
         payButton.addEventListener('click', this._payClick.bind(this));
       }
@@ -94,7 +93,24 @@
         const supportedPaymentMethods = [
           {
             supportedMethods: 'basic-card',
-          }
+
+            /*
+            data: {
+              supportedNetworks: ['visa', 'mastercard', 'amex'],
+            },
+            */
+
+            /*
+            },
+            {
+              supportedMethods: ['https://apple.com/apple-pay'],
+              data: {
+                //platform specific properties
+              },
+            },
+            { supportedMethods: ['https://www.alipay.com/webpay'], },
+            { supportedMethods: ['https://google.com/pay'], },
+            */
         ];
         const paymentDetails = {
           total: {
@@ -106,15 +122,17 @@
           }
         };
         // Options isn't required.
-        const options = {};
+        const options = {
+          //requestShipping: true,
+        };
 
-        const pr = new PaymentRequest(
+        const paymentRequest = new PaymentRequest(
           supportedPaymentMethods,
           paymentDetails,
           options
         );
         const root = this.shadowRoot;
-        pr.show()
+        paymentRequest.show()
           .then((paymentResponse) => {
             // In real implementation we would send the user filled payment data
             // to server-side and the server-side would make the payment via a
@@ -136,6 +154,7 @@
             errorDialog.opened = true;
           });
       }
+      // Utility methods that are called via Polymer data binding
       _rowTotal(price, count) {
         return price * count;
       }

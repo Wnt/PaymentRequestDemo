@@ -5,6 +5,8 @@
 This is a [Payment Request API](https://www.w3.org/TR/payment-request/) demo app built with
 [Vaadin components](https://vaadin.com/components) and [Polymer](https://www.polymer-project.org).
 
+For more resources about Payment Request API I suggest to check out Google Developer's [Deep Dive into the Payment Request API](https://developers.google.com/web/fundamentals/payments/deep-dive-into-payment-request) guide.
+
 ### [Online demo](https://jonni.app.fi/payment-demo/)
 
 ### Setup
